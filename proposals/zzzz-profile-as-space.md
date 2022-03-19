@@ -96,4 +96,4 @@ One need to watch out for the complexity that will bring multiple profile spaces
 
 | Proposed final identifier | Purpose                             | Development identifier       |
 | ------------------------- | ----------------------------------- | ---------------------------- |
-| `m.profile`               | value of `type` in `m.room.purpose` | `org.matrix.mscZZZZ.profile` |
+| `m.profile`               | value of `type` in `m.room.type` | `org.matrix.mscZZZZ.profile` |
