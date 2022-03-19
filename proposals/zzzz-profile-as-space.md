@@ -18,26 +18,26 @@ As an example, if the user has a social media room and is advertising on his pro
 
 This could allow for example to display stories on the user page or to allow the client to search for post in a 'wall room' and display them.
 
-This require being able to read the type of the space child.
+This requires being able to read the type of the space child.
 
 // TODO: Need to see if the type of the room could be fetched for private rooms.
+// Seems that private room are not displayed in room hierarchy.
 
-(We could imagine setting the room type in the m.space.child event).
+The [room hierarchy endpoint](https://spec.matrix.org/v1.2/client-server-api/#get_matrixclientv1roomsroomidhierarchy) can then be used to get the spaces childs without joining.
 
 ### Subtyping the room
 
 Typing the room as a space will help build a simple system. However, those newly created spaces will end up polluting the user space list.
 
-In order to prevent this, [room subtyping (MSC 1732)](https://github.com/matrix-org/matrix-doc/pull/3088) could be used.
+In order to prevent this, [room types (MSC 1840)](https://github.com/jfrederickson/matrix-doc/blob/proposal/room-types/proposals/1840-room-types.md) could be used.
 
 We could have the following state :
 
 ```json
 {
-  "type": "m.room.purpose",
-  "state_key": "m.profile",
+  "type": "m.room.type",
   "content": {
-    "m.enabled": true
+    "m.type": "m.profile"
   }
 }
 ```
@@ -46,41 +46,54 @@ This will allow clients to treat differently those rooms and to display a specif
 
 **This will impose existing clients to filter out those spaces.**
 
-### Joining other rooms
+## Proposal
 
-The user room will be regular 
-In order to link other rooms related to this user as a room for stories or posts, we could the same principle as spaces and add link to others rooms as state events.
+So we propose to use spaces. In order to be able to read the space content without joining the room we need
 
-Using knocking, a user could request following another user in the case of a 'wall' for example.
+* define the history visibility as `world_readable`
+* define a predictable room alias to allow searching for this space.
 
 ### Room history visibility
 
 This room should be world readable in order to easily find out what specific rooms the user has like stories, wall, blog post, pictures waterfall.
 
-As described in the MSC1769, profile rooms should be advertised in the server room directory in order to be quickly readable.
 
-## Security concerns
+
+### Room alias
+
+The space should be published in the server room directory.
+We propose the following alias:
+
+```
+#m.profile.@henri2h:carnot.cc
+```
+
+
+
+## Security considerations
 
 The user should be warned that the information published in this room will be world readable and that the room advertised in it will be discoverable by anybody.
 The client must make it clear to the user that this room is public.
 
+We need a way to prevent other user from taking this specific alias. This should be enforced on server side.
+However, client should check if the space they are viewing has been created by the right user.
 ### Alternative
 
-One alternative to using the m.space `m.space` type in `m.room.create` could be to use the 'm.profile' type.
-However, it will require a lot of modification on the server side but will prevent spaming the user space list while the client migrate.
-Link to the other user rooms will be regular m.space_child
+One alternative to using the m.space `m.space` type in `m.room.create` could be to use the 'm.profile' type. This could help indicate more clearly the goal of
+this room. This could be an answer to prevent the space to interfere with the 'regular' spaces.
+However, it will require a lot of modification on the server side and new ways
+to distinguish chat and non chat rooms should be added as matrix is tending
+increasingly to have non chat usage. (Beyond Chat ? :D)
 
 ## Private profile as room extension for private profiles
 
-Having a world readable profile as room means that anybody could access the information contained in it. However, we sometimes want to share some rooms only with specific people. To this end, we could create other profile as room which will be private and won't be published in the server's room directory.
-
-However, contrary to the public one, for those, User will need to join the private profile room in order to read it. This mean that users will be able to see the other others present in this room.
-
-When creating those private profile room, we need to keep their number low as it could rapidly become difficult to manage and may lose the users and slow the clients (and server!) down.
+Currently, this proposal is only focused on public, world_readable rooms.
+However, nothing prevent an actual user to put is profile space as private.
+One need to watch out for the complexity that will bring multiple profile spaces.
 
 ## Unstable prefix
 
 
-| Proposed final identifier | Purpose | Development identifier|
-| ------------------------------- | ------- | ----|
-| `m.profile` | value of `type` in `m.room.purpose` | `org.matrix.mscZZZZ.profile` |
+| Proposed final identifier | Purpose                             | Development identifier       |
+| ------------------------- | ----------------------------------- | ---------------------------- |
+| `m.profile`               | value of `type` in `m.room.purpose` | `org.matrix.mscZZZZ.profile` |
